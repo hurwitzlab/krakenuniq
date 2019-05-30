@@ -3,13 +3,14 @@ From: ubuntu:latest
 
 %environment
     PATH=/app/krakenuniq/scripts:$PATH
+    LD_LIBRARY_PATH=/usr/local/lib
 
 %runscript
-    exec CLARK
+    exec krakenuniq
 
 %post
     apt-get update
-    apt-get install -y locales wget build-essential git python2.7 zlib1g-dev
+    apt-get install -y locales wget build-essential git python2.7 zlib1g-dev rsync
     # python3 python3-pip
     locale-gen en_US.UTF-8
 
@@ -24,9 +25,15 @@ From: ubuntu:latest
     ./install_kraken.sh /usr/local/bin
 
     cd /app
+    wget http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz
+    tar xvf jellyfish-1.1.11.tar.gz
+    cd jellyfish-1.1.11
+    ./configure && make install
+
+    cd /app
     git clone https://github.com/fbreitwieser/krakenuniq
     cd krakenuniq
-    ./install_krakenuniq.sh -j /usr/local/bin/
+    ./install_krakenuniq.sh /usr/local/bin/
 
     git clone https://github.com/hurwitzlab/krakenuniq.git
 
