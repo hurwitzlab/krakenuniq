@@ -10,6 +10,7 @@ import csv
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from dire import die
 
 
 # --------------------------------------------------
@@ -48,23 +49,19 @@ def get_args():
                         type=float,
                         default=0.)
 
-    parser.add_argument(
-        '-t',
-        '--title',
-        help='Figure title',
-        metavar='str',
-        type=str,
-        default=''
-    )
+    parser.add_argument('-t',
+                        '--title',
+                        help='Figure title',
+                        metavar='str',
+                        type=str,
+                        default='')
 
-    parser.add_argument(
-        '-o',
-        '--outfile',
-        help='Output file',
-        metavar='str',
-        type=str,
-        default='bubble.png'
-    )
+    parser.add_argument('-o',
+                        '--outfile',
+                        help='Output file',
+                        metavar='str',
+                        type=str,
+                        default='bubble.png')
 
     return parser.parse_args()
 
@@ -100,6 +97,9 @@ def main():
                 'pct': pct,
                 'reads': int(rec['reads'])
             })
+
+    if not assigned:
+        die('No data!')
 
     df = pd.DataFrame(assigned)
     plt.scatter(x=df['sample'], y=df['tax_name'], s=df['pct'], alpha=0.5)
