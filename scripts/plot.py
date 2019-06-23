@@ -10,6 +10,7 @@ import csv
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from dire import die
 
 
 # --------------------------------------------------
@@ -103,12 +104,20 @@ def main():
                 'reads': int(rec['reads'])
             })
 
+    if not assigned:
+        die('No data!')
+
     num_samples = len(args.file)
     num_taxa = len(assigned)
+
     width = 5 if num_samples < 5 else (3 + (num_samples * .18))
     height = 5 if num_taxa < 5 else num_taxa * .05
+    width = 5 if width < 5 else width
+    height = 5 if height < 5 else height
+
     plt.figure(figsize=(width, height))
     df = pd.DataFrame(assigned)
+
     if args.counts:
         df['reads'] = (df['reads'] / df['reads'].max()) * 100
 
