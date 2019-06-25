@@ -143,8 +143,8 @@ def make_jobs(**args):
     if not isinstance(files, dict):
         raise Exception('Expected a dict')
 
-    tmpl = ('krakenuniq --fasta-input --threads {threads} --db {db} '
-            '--report-file {report} --output {out_file} {file}')
+    tmpl = ('krakenuniq --{input_format}-input --threads {threads} '
+            '--db {db} --report-file {report} --output {out_file} {file}')
 
     if not 'unpaired' in files:
         files['unpaired'] = []
@@ -171,6 +171,7 @@ def make_jobs(**args):
                 tmpl.format(threads=args['threads'],
                             db=args['kraken_db'],
                             report=report,
+                            input_format=args['input_format'],
                             out_file=out_base + '.out',
                             file=file_arg))
 
@@ -198,6 +199,7 @@ def main():
                      out_dir=args.outdir,
                      file_format=args.input_format,
                      threads=args.threads,
+                     input_format=args.input_format,
                      kraken_db=args.kraken_db)
     logging.debug('jobs =\n{}'.format('\n'.join(jobs)))
 
