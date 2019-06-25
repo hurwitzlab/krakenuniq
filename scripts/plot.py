@@ -63,6 +63,13 @@ def get_args():
                         type=str,
                         default='bubble.png')
 
+    parser.add_argument('-d',
+                        '--dataout',
+                        help='Output data file',
+                        metavar='str',
+                        type=str,
+                        default='')
+
     return parser.parse_args()
 
 
@@ -102,9 +109,12 @@ def main():
         die('No data!')
 
     df = pd.DataFrame(assigned)
-    plt.scatter(x=df['sample'], y=df['tax_name'], s=df['pct'], alpha=0.5)
+    x = df['sample']
+    y = df['tax_name']
+    plt.figure(figsize=(5 + len(x.unique()) / 5, len(y.unique()) / 4))
+    plt.scatter(x=x, y=y, s=df['pct'], alpha=0.5)
     plt.xticks(rotation=45, ha='right')
-    plt.yticks(rotation=45, ha='right')
+    #plt.yticks(rotation=45, ha='right')
     plt.gcf().subplots_adjust(bottom=.4, left=.3)
     plt.ylabel('Organism')
     plt.xlabel('Sample')
@@ -112,6 +122,9 @@ def main():
         plt.title(args.title)
 
     plt.savefig(args.outfile)
+
+    if args.dataout:
+        df.to_csv(args.dataout, index=False)
 
 
 # --------------------------------------------------
