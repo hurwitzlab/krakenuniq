@@ -166,14 +166,18 @@ def make_jobs(**args):
         out_base = os.path.join(args['out_dir'], sample_name)
         report = out_base + '.report'
 
-        if not os.path.isfile(report) or args.overwrite:
-            jobs.append(
-                tmpl.format(threads=args['threads'],
-                            db=args['kraken_db'],
-                            report=report,
-                            input_format=args['input_format'],
-                            out_file=out_base + '.out',
-                            file=file_arg))
+        if os.path.isfile(report):
+            if not args['overwrite']:
+                logging.debug('report "{}" exists, skipping'.format(report))
+                continue
+
+        jobs.append(
+            tmpl.format(threads=args['threads'],
+                        db=args['kraken_db'],
+                        report=report,
+                        input_format=args['input_format'],
+                        out_file=out_base + '.out',
+                        file=file_arg))
 
     return jobs
 
@@ -200,7 +204,8 @@ def main():
                      file_format=args.input_format,
                      threads=args.threads,
                      input_format=args.input_format,
-                     kraken_db=args.kraken_db)
+                     kraken_db=args.kraken_db,
+                     overwrite=args.overwrite)
     logging.debug('jobs =\n{}'.format('\n'.join(jobs)))
 
     if args.dry_run:
