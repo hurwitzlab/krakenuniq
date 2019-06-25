@@ -65,10 +65,20 @@ def get_args():
                         type=int,
                         default=1)
 
+    parser.add_argument('-O',
+                        '--overwrite',
+                        help='Overwrite existing reports',
+                        action='store_true')
+
     parser.add_argument('-D',
                         '--debug',
                         help='Debug to ".log"',
                         action='store_true')
+
+    parser.add_argument('--dry_run',
+                        help='Dry run',
+                        action='store_true')
+
 
     args = parser.parse_args()
 
@@ -154,12 +164,15 @@ def make_jobs(**args):
     jobs = []
     for sample_name, file_arg in file_args:
         out_base = os.path.join(args['out_dir'], sample_name)
-        jobs.append(
-            tmpl.format(threads=args['threads'],
-                        db=args['kraken_db'],
-                        report=out_base + '.report',
-                        out_file=out_base + '.out',
-                        file=file_arg))
+        report = out_base + '.report'
+
+        if not os.path.isfile(report) or args.overwrite:
+            jobs.append(
+                tmpl.format(threads=args['threads'],
+                            db=args['kraken_db'],
+                            report=report,
+                            out_file=out_base + '.out',
+                            file=file_arg))
 
     return jobs
 
@@ -188,11 +201,14 @@ def main():
                      kraken_db=args.kraken_db)
     logging.debug('jobs =\n{}'.format('\n'.join(jobs)))
 
-    parallelprocs.run(jobs,
-                      msg='Running KrakenUniq',
-                      num_procs=args.num_procs,
-                      verbose=True,
-                      halt=1)
+    if args.dry_run:
+        print('Would run {} jobs'.format(len(jobs)))
+    else:
+        parallelprocs.run(jobs,
+                          msg='Running KrakenUniq',
+                          num_procs=args.num_procs,
+                          verbose=True,
+                          halt=1)
 
     print('Done.')
 
