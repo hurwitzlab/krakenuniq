@@ -2,15 +2,14 @@
 """
 Author : Ken Youens-Clark <kyclark@email.arizona.edu>
 Date   : 2019-06-11
-Purpose: Plot KrakenUniq out
+Purpose: Summarize KrakenUniq out
 """
 
 import argparse
 import csv
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
-from dire import die
+import re
 
 
 # --------------------------------------------------
@@ -44,36 +43,17 @@ def get_args():
 
     parser.add_argument('-m',
                         '--min',
-                        help='Minimum percent',
+                        help='Minimum %',
                         metavar='float',
                         type=float,
                         default=0.)
-
-    parser.add_argument('-t',
-                        '--title',
-                        help='Figure title',
-                        metavar='str',
-                        type=str,
-                        default='')
 
     parser.add_argument('-o',
                         '--outfile',
                         help='Output file',
                         metavar='str',
                         type=str,
-                        default='bubble.png')
-
-    parser.add_argument('-d',
-                        '--dataout',
-                        help='Output data file',
-                        metavar='str',
-                        type=str,
-                        default='')
-
-    parser.add_argument('-O',
-                        '--open_image',
-                        help='Open the image when done',
-                        action='store_true')
+                        default='summary.csv')
 
     return parser.parse_args()
 
@@ -85,60 +65,40 @@ def main():
     args = get_args()
     rank = args.rank
     min_pct = args.min
+    out_file = args.outfile
 
     def lines(fh):
         for line in map(lambda s: s.rstrip('\n'), fh):
             if line and not line.startswith('#'):
                 yield line
 
-    assigned = []
+    data = []
     for i, fh in enumerate(args.file, start=1):
         basename = os.path.basename(fh.name)
         print('{:3}: {}'.format(i, basename))
 
         reader = csv.DictReader(lines(fh), delimiter='\t')
         for rec in filter(lambda r: r['rank'] == rank, reader):
+
             pct = float(rec.get('%'))
             if min_pct and pct < min_pct:
                 continue
 
-            assigned.append({
+            data.append({
                 'sample': basename,
                 'tax_id': rec['taxID'],
                 'tax_name': rec['taxName'].strip(),
                 'pct': pct,
-                'reads': int(rec['reads'])
+                'reads': int(rec['reads']),
             })
 
-    if not assigned:
-        die('No data!')
+    if data:
+        df = pd.DataFrame(data)
+        df.to_csv(out_file, index=False)
+        print('Done, at min {} exported {} to "{}"'.format(min_pct, len(data), out_file))
+    else:
+        print('No data!')
 
-    num_found = len(assigned)
-    print('At a {}% found {} {}'.format(min_pct, num_found, rank))
-
-    if num_found > 1000:
-        die('Too many!')
-
-    df = pd.DataFrame(assigned)
-    x = df['sample']
-    y = df['tax_name']
-    plt.figure(figsize=(5 + len(x.unique()) / 5, len(y.unique()) / 3))
-    plt.scatter(x, y, s=df['pct'], alpha=0.5)
-    plt.xticks(rotation=45, ha='right')
-    plt.gcf().subplots_adjust(bottom=.4, left=.4)
-    plt.ylabel('Organism')
-    plt.xlabel('Sample')
-    if args.title:
-        plt.title(args.title)
-
-    plt.savefig(args.outfile)
-    if args.dataout:
-        df.to_csv(args.dataout, index=False)
-
-    print('Done, see outfile "{}"'.format(args.outfile))
-
-    if args.open_image:
-        plt.show()
 
 # --------------------------------------------------
 if __name__ == '__main__':
